@@ -1,0 +1,40 @@
+version: '3'
+
+volumes:
+  pg_data:
+  pgadmin4_data:
+
+services:
+  pg:
+    image: postgres:11.2-alpine
+    environment:
+      POSTGRES_PASSWORD: admin
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pg_data:/var/lib/postgresql/data/pgdata
+  pgadmin4:
+    image: dpage/pgadmin4:4.2
+    ports:
+      - "8001:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@email.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin4_data:/var/lib/pgadmin
+    depends_on:
+      - "pg"
+  nginx:
+    image: nginx:1.15.9-alpine
+    volumes:
+     - ./nginx_conf:/etc/nginx/conf.d
+     - ${WEB_APPS_PATH}/site1:${WEB_DESTINATION_PATH}/site1
+     - ${WEB_APPS_PATH}/site2:${WEB_DESTINATION_PATH}/site2
+    ports:
+     - "8080:80"
+     - "8081:81"
+  php:
+    build: ./php/
+    #image: php:7.3.2-fpm-alpine3.9
+    image: php:fpm-pg
+    volumes:
+      - ${WEB_APPS_PATH}/site1:${WEB_DESTINATION_PATH}/site1
